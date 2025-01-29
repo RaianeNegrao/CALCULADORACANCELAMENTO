@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo Índice de Cancelamento - PONTZ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .month-container {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .month-container label {
+            display: block;
+            margin-top: 10px;
+        }
+        .month-container input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .add-month-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .add-month-btn:hover {
+            background-color: #45a049;
+        }
+        .result, .history {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .history li {
+            margin: 5px 0;
+        }
+        .result p {
+            font-size: 20px;
+        }
+        .cancelamento-maior {
+            color: red;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        .cancelamento-normal {
+            color: green;
+            font-size: 30px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Cálculo de Cancelamento de Vendas - PONTZ</h1>
+        
+        <div id="meses">
+            <div class="month-container" id="mes1">
+                <h3>Março 2024</h3>
+                <label for="venda1">Cotas vendidas:</label>
+                <input type="number" id="venda1" class="venda" placeholder="Cotas vendidas">
+                
+                <label for="cancelamento1">Cotas canceladas:</label>
+                <input type="number" id="cancelamento1" class="cancelamento" placeholder="Cotas canceladas">
+            </div>
+        </div>
+
+        <button class="add-month-btn" onclick="adicionarMes()" id="btnAdicionar">Adicionar Mês</button>
+        
+        <div class="result">
+            <p id="resultadoCancelamento" class="cancelamento-normal">Porcentagem de Cancelamento: -</p>
+            <p id="resultadoVendas">Vendas adicionais necessárias: -</p>
+            <p id="resultadoAcumulado">Total de cotas vendidas: -</p>
+            <p id="resultadoCanceladas">Total de cotas canceladas: -</p>
+        </div>
+
+        <div class="history">
+            <h3>Histórico de Vendas</h3>
+            <ul id="historico"></ul>
+        </div>
+
+        <button class="add-month-btn" onclick="calcularCancelamento()">Calcular Total</button>
+    </div>
+
+    <script>
+        let mesId = 1;
+        const meses = ["Março 2024", "Abril 2024", "Maio 2024", "Junho 2024", "Julho 2024", "Agosto 2024", "Setembro 2024", "Outubro 2024", "Novembro 2024", "Dezembro 2024", "Janeiro 2025", "Fevereiro 2025"];
+
+        function adicionarMes() {
+            if (mesId >= meses.length) {
+                alert("Não é possível adicionar mais meses!");
+                return;
+            }
+            
+            mesId++;
+            const mesAtual = meses[mesId - 1];
+
+            const novoMes = `
+                <div class="month-container" id="mes${mesId}">
+                    <h3>${mesAtual}</h3>
+                    <label for="venda${mesId}">Cotas vendidas:</label>
+                    <input type="number" id="venda${mesId}" class="venda" placeholder="Cotas vendidas">
+                    
+                    <label for="cancelamento${mesId}">Cotas canceladas:</label>
+                    <input type="number" id="cancelamento${mesId}" class="cancelamento" placeholder="Cotas canceladas">
+                </div>
+            `;
+            document.getElementById('meses').insertAdjacentHTML('beforeend', novoMes);
+        }
+
+        function calcularCancelamento() {
+            let totalVendas = 0;
+            let totalCancelamento = 0;
+            let historico = document.getElementById('historico');
+            historico.innerHTML = "";
+
+            document.querySelectorAll('.venda').forEach((input, index) => {
+                let venda = parseFloat(input.value) || 0;
+                let cancelamento = parseFloat(document.querySelectorAll('.cancelamento')[index].value) || 0;
+                totalVendas += venda;
+                totalCancelamento += cancelamento;
+                
+                let percentual = (cancelamento / venda) * 100 || 0;
+                let listItem = document.createElement('li');
+                listItem.textContent = `${meses[index]} - Vendidas: ${venda}, Canceladas: ${cancelamento}, Cancelamento: ${percentual.toFixed(2)}%`;
+                historico.appendChild(listItem);
+            });
+
+            let cancelamentoPercentual = (totalCancelamento / totalVendas) * 100 || 0;
+            document.getElementById('resultadoCancelamento').innerText = `Porcentagem de Cancelamento: ${cancelamentoPercentual.toFixed(2)}%`;
+
+            if (cancelamentoPercentual > 17) {
+                document.getElementById('resultadoCancelamento').classList.add('cancelamento-maior');
+                document.getElementById('resultadoCancelamento').classList.remove('cancelamento-normal');
+                
+                // Cálculo das vendas adicionais
+                let vendasNecessarias = Math.ceil((totalCancelamento / 0.17) - totalVendas);
+                
+                // Exibir vendas adicionais
+                if (vendasNecessarias < 0) vendasNecessarias = 0;  // Garantir que não seja negativo
+
+                document.getElementById('resultadoVendas').innerText = `Vendas adicionais necessárias: ${vendasNecessarias}`;
+            } else {
+                document.getElementById('resultadoCancelamento').classList.remove('cancelamento-maior');
+                document.getElementById('resultadoCancelamento').classList.add('cancelamento-normal');
+                document.getElementById('resultadoVendas').innerText = "Vendas adicionais necessárias: -";
+            }
+
+            document.getElementById('resultadoAcumulado').innerText = `Total de cotas vendidas: ${totalVendas}`;
+            document.getElementById('resultadoCanceladas').innerText = `Total de cotas canceladas: ${totalCancelamento}`;
+        }
+    </script>
+
+</body>
+</html>
